@@ -1,0 +1,26 @@
+postgres_version: 16.3
+log_level: debug
+
+profiles:
+  - name: first_profile
+    database_env: DATABASE_URI
+    username_env: USERNAME1
+    password_env: PASSWORD1
+    filters:
+      - table: customer
+        column: email
+        function: hide column
+      - table: customer
+        column: country
+        function: replace
+        value: "****"
+
+  - name: second_profile
+    database_env: DATABASE_URI
+    username_env: USERNAME2
+    password_env: PASSWORD2
+    filters:
+      - table: customer
+        column: country
+        function: hide row
+        value: Canada

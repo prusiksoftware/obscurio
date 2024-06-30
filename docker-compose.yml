@@ -1,0 +1,51 @@
+
+services:
+
+  proxy:
+    container_name: obscurio-proxy
+    build:
+        context: .
+        dockerfile: Dockerfile
+    volumes:
+      - .:/app
+    ports:
+      - "5432:5432"
+      - "80:80"
+    environment:
+      - DATABASE_URI=postgres://user:password@db:5432/chinook?sslmode=disable
+      - USERNAME1=user
+      - PASSWORD1=password
+      - USERNAME2=user2
+      - PASSWORD2=password2
+      - CONFIG_FILEPATH=/app/example-config.yaml
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl --silent --fail http://localhost/healthz/ready || exit 1"]
+      interval: 10s
+      retries: 6
+      timeout: 5s
+    logging:
+      options:
+        max-size: "10m"
+        max-file: "3"
+  db:
+    container_name: production-db
+    image: postgres:16
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: database
+    ports:
+      - "5433:5432"
+    volumes:
+      - ./example_db/sample_data/Chinook_PostgreSql.sql:/docker-entrypoint-initdb.d/Chinook_PostgreSql.sql
+      - ./example_db/sample_data/Chinook_PostgreSql_AutoIncrementPKs.sql:/docker-entrypoint-initdb.d/Chinook_PostgreSql_AutoIncrementPKs.sql
+      - ./example_db/sample_data/Chinook_PostgreSql_SerialPKs.sql:/docker-entrypoint-initdb.d/Chinook_PostgreSql_SerialPKs.sql
+      - db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U user -d database -h localhost -p 5432"]
+
+volumes:
+  db_data:

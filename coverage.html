@@ -1,0 +1,1616 @@
+
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+		<title>analytics: Go Coverage Report</title>
+		<style>
+			body {
+				background: black;
+				color: rgb(80, 80, 80);
+			}
+			body, pre, #legend span {
+				font-family: Menlo, monospace;
+				font-weight: bold;
+			}
+			#topbar {
+				background: black;
+				position: fixed;
+				top: 0; left: 0; right: 0;
+				height: 42px;
+				border-bottom: 1px solid rgb(80, 80, 80);
+			}
+			#content {
+				margin-top: 50px;
+			}
+			#nav, #legend {
+				float: left;
+				margin-left: 10px;
+			}
+			#legend {
+				margin-top: 12px;
+			}
+			#nav {
+				margin-top: 10px;
+			}
+			#legend span {
+				margin: 0 5px;
+			}
+			.cov0 { color: rgb(192, 0, 0) }
+.cov1 { color: rgb(128, 128, 128) }
+.cov2 { color: rgb(116, 140, 131) }
+.cov3 { color: rgb(104, 152, 134) }
+.cov4 { color: rgb(92, 164, 137) }
+.cov5 { color: rgb(80, 176, 140) }
+.cov6 { color: rgb(68, 188, 143) }
+.cov7 { color: rgb(56, 200, 146) }
+.cov8 { color: rgb(44, 212, 149) }
+.cov9 { color: rgb(32, 224, 152) }
+.cov10 { color: rgb(20, 236, 155) }
+
+		</style>
+	</head>
+	<body>
+		<div id="topbar">
+			<div id="nav">
+				<select id="files">
+				
+				<option value="file0">github.com/prusiksoftware/monorepo/obscurio/analytics/main.go (100.0%)</option>
+				
+				<option value="file1">github.com/prusiksoftware/monorepo/obscurio/http_server/http_server.go (76.3%)</option>
+				
+				<option value="file2">github.com/prusiksoftware/monorepo/obscurio/main.go (0.0%)</option>
+				
+				<option value="file3">github.com/prusiksoftware/monorepo/obscurio/psql_proxy/client_manager.go (72.1%)</option>
+				
+				<option value="file4">github.com/prusiksoftware/monorepo/obscurio/psql_proxy/config.go (95.2%)</option>
+				
+				<option value="file5">github.com/prusiksoftware/monorepo/obscurio/psql_proxy/db_manager.go (47.1%)</option>
+				
+				<option value="file6">github.com/prusiksoftware/monorepo/obscurio/psql_proxy/modify_queries/column_hider.go (100.0%)</option>
+				
+				<option value="file7">github.com/prusiksoftware/monorepo/obscurio/psql_proxy/modify_queries/column_replacer.go (87.0%)</option>
+				
+				<option value="file8">github.com/prusiksoftware/monorepo/obscurio/psql_proxy/modify_queries/query_modifier.go (85.7%)</option>
+				
+				<option value="file9">github.com/prusiksoftware/monorepo/obscurio/psql_proxy/modify_queries/row_hider.go (95.8%)</option>
+				
+				<option value="file10">github.com/prusiksoftware/monorepo/obscurio/psql_proxy/modify_queries/wildcard_expander.go (91.1%)</option>
+				
+				<option value="file11">github.com/prusiksoftware/monorepo/obscurio/psql_proxy/schema/debug_utils.go (0.0%)</option>
+				
+				<option value="file12">github.com/prusiksoftware/monorepo/obscurio/psql_proxy/schema/schema.go (77.3%)</option>
+				
+				<option value="file13">github.com/prusiksoftware/monorepo/obscurio/psql_proxy/server.go (0.0%)</option>
+				
+				<option value="file14">github.com/prusiksoftware/monorepo/obscurio/psql_proxy/test_utils.go (0.0%)</option>
+				
+				</select>
+			</div>
+			<div id="legend">
+				<span>not tracked</span>
+			
+				<span class="cov0">no coverage</span>
+				<span class="cov1">low coverage</span>
+				<span class="cov2">*</span>
+				<span class="cov3">*</span>
+				<span class="cov4">*</span>
+				<span class="cov5">*</span>
+				<span class="cov6">*</span>
+				<span class="cov7">*</span>
+				<span class="cov8">*</span>
+				<span class="cov9">*</span>
+				<span class="cov10">high coverage</span>
+			
+			</div>
+		</div>
+		<div id="content">
+		
+		<pre class="file" id="file0" style="display: none">package analytics
+
+import "time"
+
+type DurationType string
+
+type Event struct {
+        Profile       string
+        OriginalQuery string
+        ModifiedQuery string
+        Durations     map[DurationType]time.Duration
+        Created       time.Time
+}
+
+type Analytics struct {
+        retentionSeconds int
+        Events           []Event
+}
+
+func New(retentionSeconds int) *Analytics <span class="cov6" title="2">{
+        return &amp;Analytics{
+                retentionSeconds: retentionSeconds,
+        }
+}</span>
+
+func (a *Analytics) TrackQuery(profile, originalQuery, modifiedQuery string, durations map[DurationType]time.Duration) <span class="cov10" title="3">{
+        //        enumerate tables and columns accessed
+        event := Event{
+                Profile:       profile,
+                OriginalQuery: originalQuery,
+                ModifiedQuery: modifiedQuery,
+                Durations:     durations,
+                Created:       time.Now(),
+        }
+        a.Events = append(a.Events, event)
+}</span>
+</pre>
+		
+		<pre class="file" id="file1" style="display: none">package http_server
+
+import (
+        "fmt"
+        "github.com/prusiksoftware/monorepo/obscurio/analytics"
+        "net/http"
+)
+
+type Server struct {
+        isReady          bool
+        isLive           bool
+        port             int
+        analyticsTracker *analytics.Analytics
+}
+
+func (s *Server) healthzReady(w http.ResponseWriter, r *http.Request) <span class="cov6" title="3">{
+        if !s.isReady </span><span class="cov4" title="2">{
+                w.WriteHeader(http.StatusInternalServerError)
+                w.Write([]byte("Not ready"))
+                return
+        }</span>
+        <span class="cov1" title="1">w.WriteHeader(http.StatusOK)
+        w.Write([]byte("OK"))</span>
+}
+
+func (s *Server) healthzLive(w http.ResponseWriter, r *http.Request) <span class="cov6" title="3">{
+        if !s.isLive </span><span class="cov4" title="2">{
+                w.WriteHeader(http.StatusInternalServerError)
+                w.Write([]byte("Not live"))
+                return
+        }</span>
+        <span class="cov1" title="1">w.WriteHeader(http.StatusOK)
+        w.Write([]byte("OK"))</span>
+}
+
+func (s *Server) debug(w http.ResponseWriter, r *http.Request) <span class="cov1" title="1">{
+        w.WriteHeader(http.StatusOK)
+        if s.analyticsTracker != nil </span><span class="cov1" title="1">{
+                fmt.Fprintf(w, "Ready: %t\n", s.isReady)
+                fmt.Fprintf(w, "Live: %t\n", s.isLive)
+                fmt.Fprintf(w, "Port: %d\n\n", s.port)
+                for _, event := range s.analyticsTracker.Events </span><span class="cov4" title="2">{
+                        fmt.Fprintf(w, "\n\n")
+                        fmt.Fprintf(w, "original: %s\n", event.OriginalQuery)
+                        fmt.Fprintf(w, "created: %s\n", event.Created)
+                        fmt.Fprintf(w, "modified: %s\n", event.ModifiedQuery)
+                        fmt.Fprintf(w, "profile: %s\n", event.Profile)
+                        fmt.Fprintf(w, "events:\n")
+                        for k, v := range event.Durations </span><span class="cov4" title="2">{
+                                fmt.Fprintf(w, "  - %s: %s\n", k, v)
+                        }</span>
+                }
+        }
+}
+
+func (s *Server) SetReady(ready bool) <span class="cov4" title="2">{
+        s.isReady = ready
+}</span>
+
+func (s *Server) SetLive(live bool) <span class="cov4" title="2">{
+        s.isLive = live
+}</span>
+
+func (s *Server) Start() <span class="cov0" title="0">{
+        http.HandleFunc("/healthz/ready", s.healthzReady)
+        http.HandleFunc("/healthz/live", s.healthzLive)
+        http.HandleFunc("/debug", s.debug)
+        addr := fmt.Sprintf(":%d", s.port)
+        fmt.Printf("HTTP server listening on %s\n", addr)
+        err := http.ListenAndServe(addr, nil)
+        if err != nil </span><span class="cov0" title="0">{
+                panic(err)</span>
+        }
+        <span class="cov0" title="0">fmt.Printf("HTTP server stopped\n")</span>
+}
+
+func NewHTTPServer(at *analytics.Analytics) *Server <span class="cov10" title="7">{
+        return &amp;Server{
+                isReady:          false,
+                isLive:           false,
+                port:             80,
+                analyticsTracker: at,
+        }
+}</span>
+</pre>
+		
+		<pre class="file" id="file2" style="display: none">package main
+
+import (
+        "fmt"
+        "github.com/prusiksoftware/monorepo/obscurio/analytics"
+        "github.com/prusiksoftware/monorepo/obscurio/http_server"
+        "github.com/prusiksoftware/monorepo/obscurio/psql_proxy"
+        "log"
+        "sync"
+)
+
+func main() <span class="cov0" title="0">{
+        wg := sync.WaitGroup{}
+        wg.Add(1)
+        fmt.Println("starting proxy server")
+
+        config, err := psql_proxy.GetConfig()
+        if err != nil </span><span class="cov0" title="0">{
+                log.Fatal(err)
+                panic(err)</span>
+        }
+        <span class="cov0" title="0">fmt.Println("config loaded")
+
+        a := analytics.New(60)
+
+        psqlserver, err := psql_proxy.NewServer(config, a)
+        if err != nil </span><span class="cov0" title="0">{
+                log.Fatal(err)
+                panic(err)</span>
+        }
+        <span class="cov0" title="0">fmt.Println("server created")
+
+        httpserver := http_server.NewHTTPServer(a)
+        go func() </span><span class="cov0" title="0">{
+                httpserver.Start()
+        }</span>()
+
+        <span class="cov0" title="0">go func(listeningChan &lt;-chan psql_proxy.Status) </span><span class="cov0" title="0">{
+                for </span><span class="cov0" title="0">{
+                        status := &lt;-listeningChan
+                        fmt.Println("proxy status: ", status)
+                        if status == psql_proxy.Running </span><span class="cov0" title="0">{
+                                httpserver.SetLive(true)
+                                httpserver.SetReady(true)
+                        }</span>
+                        <span class="cov0" title="0">if status == psql_proxy.Done </span><span class="cov0" title="0">{
+                                wg.Done()
+                                return
+                        }</span>
+                }
+        }(psqlserver.StatusChan)
+
+        <span class="cov0" title="0">psqlserver.Run()
+        wg.Wait()</span> // wait for the server to finish
+}
+</pre>
+		
+		<pre class="file" id="file3" style="display: none">package psql_proxy
+
+import (
+        "errors"
+        "fmt"
+        "github.com/jackc/pgproto3/v2"
+        "io"
+        "log"
+        "net"
+        "strings"
+)
+
+type QueryHandlerFunc func(query string, conn *net.Conn) error
+type ClientManager struct {
+        config        *Conf
+        clientConn    net.Conn
+        clientBackend *pgproto3.Backend
+        configProfile *Profile
+        serverProfile *dbManager
+}
+
+func NewClientManager(conn net.Conn, config *Conf) *ClientManager <span class="cov10" title="5">{
+        backend := pgproto3.NewBackend(
+                pgproto3.NewChunkReader(conn),
+                conn,
+        )
+        return &amp;ClientManager{
+                config:        config,
+                clientConn:    conn,
+                clientBackend: backend,
+                configProfile: nil,
+                serverProfile: nil,
+        }
+}</span>
+
+func (p *ClientManager) Run() error <span class="cov8" title="4">{
+
+        profile, err := p.handleStartup()
+        if err != nil </span><span class="cov4" title="2">{
+                return err
+        }</span>
+        <span class="cov4" title="2">p.configProfile = profile
+
+        dbManager, err := createDBManager(*profile)
+        if err != nil </span><span class="cov0" title="0">{
+                return err
+        }</span>
+        <span class="cov4" title="2">p.serverProfile = dbManager
+
+        for </span><span class="cov4" title="2">{
+                msg, err := p.clientBackend.Receive()
+                if errors.Is(err, io.ErrUnexpectedEOF) </span><span class="cov0" title="0">{
+                        log.Printf("connection closed by client")
+                        return err
+                }</span>
+
+                <span class="cov4" title="2">queryMsg, ok := msg.(*pgproto3.Query)
+                if ok </span><span class="cov4" title="2">{
+                        originalQuery := queryMsg.String
+
+                        modifiedQuery, err := dbManager.modifyQuery(originalQuery)
+                        if err != nil </span><span class="cov1" title="1">{
+                                log.Printf("failed to modify query: %v", err)
+                                return err
+                        }</span>
+                        <span class="cov1" title="1">p.config.infoLogQuery("client query:", originalQuery)
+                        p.config.debugLog("with mutators: %v", strings.Join(dbManager.mutatorNames(), ", "))
+                        p.config.infoLogQuery("server query:", modifiedQuery)
+
+                        err = p.serverProfile.ProxyQuery(modifiedQuery, &amp;p.clientConn)
+                        if err != nil </span><span class="cov0" title="0">{
+                                log.Printf("failed to proxy query: %v", err)
+                                return err
+                        }</span>
+                }
+
+        }
+}
+
+func (p *ClientManager) handleStartup() (*Profile, error) <span class="cov8" title="4">{
+        for </span><span class="cov8" title="4">{
+                msg, err := p.clientBackend.ReceiveStartupMessage()
+                if err != nil </span><span class="cov1" title="1">{
+                        log.Printf("failed to receive startup message: %v", err)
+                        return nil, err
+                }</span>
+
+                <span class="cov7" title="3">switch startupMsg := msg.(type) </span>{
+
+                case *pgproto3.SSLRequest:<span class="cov0" title="0">
+                        _, err = p.clientConn.Write([]byte("N"))
+                        if err != nil </span><span class="cov0" title="0">{
+                                return nil, fmt.Errorf("error sending deny SSL request: %w", err)
+                        }</span>
+
+                case *pgproto3.StartupMessage:<span class="cov7" title="3">
+                        username := startupMsg.Parameters["user"]
+                        profile, err := p.config.getProfile(username)
+                        if err != nil </span><span class="cov1" title="1">{
+                                log.Printf("failed to get configProfile: %v", err)
+                                return nil, err
+                        }</span>
+
+                        <span class="cov4" title="2">authOk := &amp;pgproto3.AuthenticationOk{}
+                        err = p.clientBackend.Send(authOk)
+                        if err != nil </span><span class="cov0" title="0">{
+                                log.Printf("failed to send AuthenticationOk: %v", err)
+                                return nil, err
+                        }</span>
+
+                        <span class="cov4" title="2">err = p.clientBackend.Send(&amp;pgproto3.ParameterStatus{
+                                Name:  "server_version",
+                                Value: "16.3",
+                        })
+                        if err != nil </span><span class="cov0" title="0">{
+                                log.Printf("failed to send ParameterStatus: %v", err)
+                        }</span>
+
+                        // Send ReadyForQuery
+                        <span class="cov4" title="2">readyForQuery := &amp;pgproto3.ReadyForQuery{TxStatus: 'I'}
+                        err = p.clientBackend.Send(readyForQuery)
+                        if err != nil </span><span class="cov0" title="0">{
+                                log.Printf("failed to send ReadyForQuery: %v", err)
+                                return nil, err
+                        }</span>
+
+                        <span class="cov4" title="2">return profile, nil</span>
+
+                default:<span class="cov0" title="0">
+                        log.Printf("received unexpected message: %#v", startupMsg)
+                        log.Printf("%v\n", msg)
+                        return nil, errors.New("unexpected message")</span>
+                }
+        }
+}
+
+func (p *ClientManager) Close() error <span class="cov0" title="0">{
+
+        return nil
+        //return p.clientConn.Close()
+}</span>
+</pre>
+		
+		<pre class="file" id="file4" style="display: none">package psql_proxy
+
+import (
+        "errors"
+        "fmt"
+        "github.com/alecthomas/chroma/v2/quick"
+        "gopkg.in/yaml.v3"
+        "io"
+        "log"
+        "os"
+        "strings"
+        "sync"
+)
+
+type ActionType string
+type LogLevel string
+
+const (
+        hideColumn ActionType = "hide column"
+        hideRow               = "hide row"
+
+        replaceColumn = "replace column"
+)
+
+const (
+        debug LogLevel = "debug"
+        info           = "info"
+)
+
+var singletonConf *Conf
+
+type DataFilter struct {
+        Function ActionType `yaml:"function"`
+        Table    string     `yaml:"table"`
+        Column   string     `yaml:"column,omitempty"`
+        Value    string     `yaml:"value,omitempty"`
+}
+
+type Profile struct {
+        Name        string `yaml:"name"`
+        DatabaseEnv string `yaml:"database_env"`
+
+        UsernameEnv string       `yaml:"username_env"`
+        PasswordEnv string       `yaml:"password_env"`
+        Username    string       `yaml:"-"`
+        password    string       `yaml:"-"`
+        Filters     []DataFilter `yaml:"filters"`
+}
+
+type Conf struct {
+        PostgresVersion string    `yaml:"postgres_version"`
+        LogLevel        LogLevel  `yaml:"log_level"`
+        Profiles        []Profile `yaml:"profiles"`
+
+        logger     *log.Logger
+        loggerLock *sync.Mutex
+}
+
+func GetConfig() (*Conf, error) <span class="cov10" title="15">{
+        if singletonConf != nil </span><span class="cov8" title="10">{
+                return singletonConf, nil
+        }</span>
+
+        <span class="cov6" title="5">filepath := os.Getenv("CONFIG_FILEPATH")
+        fmt.Printf("filepath: %s\n", filepath)
+        if filepath == "" </span><span class="cov1" title="1">{
+                return nil, errors.New("CONFIG_FILEPATH not set")
+        }</span>
+
+        // get file content
+        <span class="cov5" title="4">yamlFile, err := os.ReadFile(filepath)
+        if err != nil </span><span class="cov1" title="1">{
+                return nil, errors.New("Unable to read file")
+        }</span>
+
+        // unmarshal to struct
+        <span class="cov4" title="3">c := &amp;Conf{
+                loggerLock: &amp;sync.Mutex{},
+                logger:     log.New(os.Stdout, "psql_proxy: ", log.LstdFlags),
+        }
+        err = yaml.Unmarshal(yamlFile, c)
+        if err != nil </span><span class="cov1" title="1">{
+                return nil, errors.New("Unable to unmarshal file")
+        }</span>
+
+        <span class="cov3" title="2">for i, p := range c.Profiles </span><span class="cov5" title="4">{
+                c.Profiles[i].Username = os.Getenv(p.UsernameEnv)
+                c.Profiles[i].password = os.Getenv(p.PasswordEnv)
+        }</span>
+        <span class="cov3" title="2">singletonConf = c
+        return c, nil</span>
+}
+
+func (c *Conf) getProfile(username string) (*Profile, error) <span class="cov6" title="5">{
+        for _, profile := range c.Profiles </span><span class="cov7" title="7">{
+                if profile.Username == username </span><span class="cov4" title="3">{
+                        return &amp;profile, nil
+                }</span>
+        }
+        <span class="cov3" title="2">return nil, errors.New(fmt.Sprintf("configProfile '%s' not found", username))</span>
+}
+
+func (c *Conf) debugLog(format string, a ...any) <span class="cov3" title="2">{
+        c.loggerLock.Lock()
+        str := fmt.Sprintf(format, a...)
+        if c.LogLevel == debug </span><span class="cov3" title="2">{
+                c.logger.Println(str)
+        }</span>
+        <span class="cov3" title="2">c.loggerLock.Unlock()</span>
+}
+
+func (c *Conf) infoLogQuery(prefix, query string) <span class="cov4" title="3">{
+        shouldLog := false
+        validStatuses := []LogLevel{"info", "debug"}
+        for _, vs := range validStatuses </span><span class="cov6" title="6">{
+                if c.LogLevel == vs </span><span class="cov4" title="3">{
+                        shouldLog = true
+                }</span>
+        }
+        <span class="cov4" title="3">if !shouldLog </span><span class="cov0" title="0">{
+                return
+        }</span>
+
+        <span class="cov4" title="3">var builder strings.Builder
+        var w io.Writer = &amp;builder
+        err := quick.Highlight(w, query, "postgresql", "terminal256", "monokai")
+        if err != nil </span><span class="cov0" title="0">{
+                c.logger.Fatal(err)
+        }</span>
+
+        <span class="cov3" title="2">c.loggerLock.Lock()
+        fmt.Printf("%s %s\n", prefix, builder.String())
+        c.loggerLock.Unlock()</span>
+}
+</pre>
+		
+		<pre class="file" id="file5" style="display: none">package psql_proxy
+
+import (
+        "context"
+        "fmt"
+        "github.com/jackc/pgx/v5/pgconn"
+        "github.com/jackc/pgx/v5/pgproto3"
+        "github.com/prusiksoftware/monorepo/obscurio/psql_proxy/modify_queries"
+        "github.com/prusiksoftware/monorepo/obscurio/psql_proxy/schema"
+        "log"
+        "net"
+        "os"
+)
+
+type dbManager struct {
+        name string
+
+        tables []schema.Table
+
+        mutators []modify_queries.ModifierInterface
+        username string
+        password string
+        dbUri    string
+
+        dbConn     *pgconn.PgConn
+        clientConn *net.Conn
+}
+
+func (sp *dbManager) GetDBConnection() *pgconn.PgConn <span class="cov0" title="0">{
+        if sp.dbConn != nil </span><span class="cov0" title="0">{
+                return sp.dbConn
+        }</span>
+
+        <span class="cov0" title="0">pgConn, err := pgconn.Connect(context.Background(), sp.dbUri)
+        if err != nil </span><span class="cov0" title="0">{
+                log.Fatalln("pgconn failed to connect:", err)
+        }</span>
+        <span class="cov0" title="0">sp.dbConn = pgConn
+
+        return pgConn</span>
+}
+
+func (sp *dbManager) ProxyQuery(query string, clientConnection *net.Conn) error <span class="cov0" title="0">{
+        dbConn := sp.GetDBConnection().Conn()
+        dbFrontend := pgproto3.NewFrontend(dbConn, dbConn)
+
+        // Send the query to the database
+        msg := &amp;pgproto3.Query{String: query}
+        dbFrontend.SendQuery(msg)
+
+        // Flush the query to the database
+        err := dbFrontend.Flush()
+        if err != nil </span><span class="cov0" title="0">{
+                return fmt.Errorf("error sending query: %w", err)
+        }</span>
+
+        <span class="cov0" title="0">for </span><span class="cov0" title="0">{
+                // receive a message from the database
+                msg, err := dbFrontend.Receive()
+                if err != nil </span><span class="cov0" title="0">{
+                        return fmt.Errorf("error receiving message: %w", err)
+                }</span>
+
+                // convert to bytes
+                <span class="cov0" title="0">b, err := msg.Encode(nil)
+                if err != nil </span><span class="cov0" title="0">{
+                        return fmt.Errorf("error encoding message: %w", err)
+                }</span>
+
+                // write the message to the client
+                <span class="cov0" title="0">if clientConnection != nil </span><span class="cov0" title="0">{
+                        n, err := (*clientConnection).Write(b)
+                        if err != nil </span><span class="cov0" title="0">{
+                                fmt.Printf("error proxying message: %d; %v\n", n, err)
+                        }</span>
+                }
+
+                <span class="cov0" title="0">if _, ok := msg.(*pgproto3.ReadyForQuery); ok </span><span class="cov0" title="0">{
+                        return nil
+                }</span>
+        }
+}
+
+func (sp *dbManager) modifyQuery(query string) (string, error) <span class="cov5" title="2">{
+        qm, err := modify_queries.NewQueryModifier(query, sp.mutators)
+        if err != nil </span><span class="cov1" title="1">{
+                return "", fmt.Errorf("failed to modify query: %w", err)
+        }</span>
+        <span class="cov1" title="1">err = qm.Modify()
+        if err != nil </span><span class="cov0" title="0">{
+                return "", fmt.Errorf("failed to modify query: %w", err)
+        }</span>
+        <span class="cov1" title="1">return qm.Query()</span>
+}
+
+func (sp *dbManager) mutatorNames() []string <span class="cov1" title="1">{
+        names := []string{}
+        for _, mutator := range sp.mutators </span><span class="cov5" title="2">{
+                names = append(names, mutator.String())
+        }</span>
+        <span class="cov1" title="1">return names</span>
+}
+
+func createDBManager(profile Profile) (*dbManager, error) <span class="cov5" title="2">{
+        dbURI, exists := os.LookupEnv(profile.DatabaseEnv)
+        if !exists </span><span class="cov0" title="0">{
+                return nil, fmt.Errorf("database environment variable %s not set", profile.DatabaseEnv)
+        }</span>
+
+        <span class="cov5" title="2">username, exists := os.LookupEnv(profile.UsernameEnv)
+        if !exists </span><span class="cov0" title="0">{
+                return nil, fmt.Errorf("database environment variable %s not set", profile.DatabaseEnv)
+        }</span>
+
+        <span class="cov5" title="2">password, exists := os.LookupEnv(profile.PasswordEnv)
+        if !exists </span><span class="cov0" title="0">{
+                return nil, fmt.Errorf("database environment variable %s not set", profile.DatabaseEnv)
+        }</span>
+
+        <span class="cov5" title="2">dbm := &amp;dbManager{
+                name:     profile.Name,
+                username: username,
+                password: password,
+                dbUri:    dbURI,
+                tables:   schema.GetTables(dbURI),
+        }
+
+        hiddenCols := map[string][]string{}
+        for _, filter := range profile.Filters </span><span class="cov10" title="4">{
+                if filter.Function == hideColumn </span><span class="cov5" title="2">{
+                        if _, ok := hiddenCols[filter.Table]; !ok </span><span class="cov5" title="2">{
+                                hiddenCols[filter.Table] = []string{}
+                        }</span>
+                        <span class="cov5" title="2">hiddenCols[filter.Table] = append(hiddenCols[filter.Table], filter.Column)</span>
+                }
+        }
+
+        <span class="cov5" title="2">mutators := []modify_queries.ModifierInterface{
+                modify_queries.NewWildcardExpander(dbm.tables, hiddenCols),
+                modify_queries.NewColumnHider(hiddenCols),
+        }
+
+        for _, filter := range profile.Filters </span><span class="cov10" title="4">{
+                if filter.Function == hideRow </span><span class="cov0" title="0">{
+                        mutators = append(mutators, modify_queries.NewRowHider(filter.Table, filter.Column, modify_queries.NotEqual, filter.Value))
+
+                }</span>
+        }
+
+        <span class="cov5" title="2">replacedCols := map[string]map[string]string{}
+        for _, filter := range profile.Filters </span><span class="cov10" title="4">{
+                if filter.Function == replaceColumn </span><span class="cov0" title="0">{
+                        if _, ok := replacedCols[filter.Table]; !ok </span><span class="cov0" title="0">{
+                                replacedCols[filter.Table] = map[string]string{}
+                        }</span>
+                        <span class="cov0" title="0">replacedCols[filter.Table][filter.Column] = filter.Value</span>
+                }
+        }
+        <span class="cov5" title="2">for table, columns := range replacedCols </span><span class="cov0" title="0">{
+                mutators = append(mutators, modify_queries.NewColumnReplacer(table, columns))
+        }</span>
+
+        <span class="cov5" title="2">dbm.mutators = mutators
+        return dbm, nil</span>
+}
+</pre>
+		
+		<pre class="file" id="file6" style="display: none">package modify_queries
+
+import (
+        pg_query "github.com/pganalyze/pg_query_go/v5"
+)
+
+type ColumnHider struct {
+        columnsToHide map[string][]string
+}
+
+func NewColumnHider(columnsToHide map[string][]string) *ColumnHider <span class="cov5" title="4">{
+        return &amp;ColumnHider{
+                columnsToHide: columnsToHide,
+        }
+}</span>
+
+func (ch *ColumnHider) String() string <span class="cov1" title="1">{
+        return "ColumnHider"
+}</span>
+
+func (ch *ColumnHider) visit(rawStatement *pg_query.RawStmt) error <span class="cov4" title="3">{
+        selectStatement, ok := rawStatement.Stmt.Node.(*pg_query.Node_SelectStmt)
+        if ok </span><span class="cov4" title="3">{
+                tableNameAliases := map[string]string{}
+                fromClause := selectStatement.SelectStmt.FromClause
+                if fromClause != nil </span><span class="cov4" title="3">{
+                        for _, from := range fromClause </span><span class="cov4" title="3">{
+                                rangeVar, ok := from.Node.(*pg_query.Node_RangeVar)
+                                if ok </span><span class="cov4" title="3">{
+                                        tableName := rangeVar.RangeVar.Relname
+                                        tableNameAliases[tableName] = tableName
+                                        // TODO: aliases
+                                }</span>
+                        }
+                }
+
+                <span class="cov4" title="3">var newTargetList []*pg_query.Node
+                for _, target := range selectStatement.SelectStmt.TargetList </span><span class="cov9" title="19">{
+                        shouldHide := false
+                        resTarget, ok := target.Node.(*pg_query.Node_ResTarget)
+                        if ok </span><span class="cov9" title="19">{
+                                node := resTarget.ResTarget.Val.Node
+                                columnRef, ok := node.(*pg_query.Node_ColumnRef)
+                                if ok </span><span class="cov9" title="19">{
+                                        fields := columnRef.ColumnRef.Fields
+                                        fieldName := fields[len(fields)-1].GetString_().GetSval()
+                                        // TODO: handle aliases and table names
+
+                                        tableName := ""
+                                        if len(fields) == 1 </span><span class="cov9" title="19">{
+                                                for _, fullName := range tableNameAliases </span><span class="cov9" title="19">{
+                                                        tableName = fullName
+                                                }</span>
+                                        } else <span class="cov0" title="0">{
+                                        }</span>
+
+                                        <span class="cov9" title="19">for hideTableName, hideColumnNames := range ch.columnsToHide </span><span class="cov10" title="22">{
+                                                if hideTableName == tableName </span><span class="cov9" title="19">{
+                                                        for _, hideColumnName := range hideColumnNames </span><span class="cov9" title="19">{
+                                                                if hideColumnName == fieldName </span><span class="cov3" title="2">{
+                                                                        shouldHide = true
+                                                                }</span>
+                                                        }
+                                                }
+                                        }
+
+                                }
+                        }
+                        <span class="cov9" title="19">if !shouldHide </span><span class="cov9" title="17">{
+                                newTargetList = append(newTargetList, target)
+                        }</span>
+                }
+                <span class="cov4" title="3">selectStatement.SelectStmt.TargetList = newTargetList</span>
+        }
+        <span class="cov4" title="3">return nil</span>
+}
+</pre>
+		
+		<pre class="file" id="file7" style="display: none">package modify_queries
+
+import (
+        pg_query "github.com/pganalyze/pg_query_go/v5"
+)
+
+type ColumnReplacer struct {
+        tableName string
+        values    map[string]string
+}
+
+func NewColumnReplacer(tableName string, values map[string]string) *ColumnReplacer <span class="cov1" title="1">{
+        return &amp;ColumnReplacer{
+                tableName: tableName,
+                values:    values,
+        }
+}</span>
+
+func (cr *ColumnReplacer) String() string <span class="cov0" title="0">{
+        return "ColumnReplacer"
+}</span>
+
+func (cr *ColumnReplacer) visit(stmt *pg_query.RawStmt) error <span class="cov1" title="1">{
+        selectStmt := stmt.Stmt.GetSelectStmt()
+        if selectStmt == nil </span><span class="cov0" title="0">{
+                return nil
+        }</span>
+
+        <span class="cov1" title="1">for _, target := range selectStmt.TargetList </span><span class="cov10" title="3">{
+                resTarget, ok := target.Node.(*pg_query.Node_ResTarget)
+                if ok </span><span class="cov10" title="3">{
+                        node := resTarget.ResTarget.Val.Node
+                        columnRef, ok := node.(*pg_query.Node_ColumnRef)
+                        if ok </span><span class="cov10" title="3">{
+                                fields := columnRef.ColumnRef.Fields
+                                fieldName := fields[len(fields)-1].GetString_().GetSval()
+                                if fieldName == "" </span><span class="cov0" title="0">{
+                                        continue</span>
+                                }
+
+                                <span class="cov10" title="3">tableName := ""
+                                if len(fields) == 1 </span><span class="cov10" title="3">{
+                                        tableName = cr.tableName
+                                }</span>
+
+                                <span class="cov10" title="3">if tableName == cr.tableName </span><span class="cov10" title="3">{
+                                        if newValue, ok := cr.values[fieldName]; ok </span><span class="cov10" title="3">{
+                                                resTarget.ResTarget.Name = fieldName
+                                                resTarget.ResTarget.Val = &amp;pg_query.Node{
+                                                        Node: &amp;pg_query.Node_AConst{
+                                                                AConst: &amp;pg_query.A_Const{
+                                                                        Val: &amp;pg_query.A_Const_Sval{
+                                                                                Sval: &amp;pg_query.String{Sval: newValue},
+                                                                        },
+                                                                },
+                                                        },
+                                                }
+                                        }</span>
+                                }
+                        }
+                }
+        }
+        <span class="cov1" title="1">return nil</span>
+}
+</pre>
+		
+		<pre class="file" id="file8" style="display: none">package modify_queries
+
+import (
+        pg_query "github.com/pganalyze/pg_query_go/v5"
+)
+
+type QueryModifier struct {
+        originalQuery string
+        ast           *pg_query.ParseResult
+        visitors      []ModifierInterface
+}
+
+type ModifierInterface interface {
+        visit(*pg_query.RawStmt) error
+        String() string
+}
+
+func NewQueryModifier(query string, visitors []ModifierInterface) (*QueryModifier, error) <span class="cov10" title="11">{
+        parseResult, err := pg_query.Parse(query)
+        if err != nil </span><span class="cov1" title="1">{
+                return nil, err
+        }</span>
+        <span class="cov9" title="10">return &amp;QueryModifier{
+                originalQuery: query,
+                ast:           parseResult,
+                visitors:      visitors,
+        }, nil</span>
+}
+
+func (qc *QueryModifier) Modify() error <span class="cov9" title="10">{
+        for _, visitor := range qc.visitors </span><span class="cov10" title="11">{
+                for _, stmt := range qc.ast.Stmts </span><span class="cov10" title="11">{
+                        err := visitor.visit(stmt)
+                        if err != nil </span><span class="cov0" title="0">{
+                                return err
+                        }</span>
+                }
+        }
+        <span class="cov9" title="10">return nil</span>
+}
+
+func (qc *QueryModifier) Query() (string, error) <span class="cov9" title="10">{
+        res, err := pg_query.Deparse(qc.ast)
+        if err != nil </span><span class="cov0" title="0">{
+                return "", err
+        }</span>
+        <span class="cov9" title="10">return res, nil</span>
+}
+</pre>
+		
+		<pre class="file" id="file9" style="display: none">package modify_queries
+
+import (
+        pg_query "github.com/pganalyze/pg_query_go/v5"
+)
+
+type WhereOperator string
+
+const (
+        Equal              WhereOperator = "="
+        NotEqual           WhereOperator = "!="
+        LessThan           WhereOperator = "&lt;"
+        LessThanOrEqual    WhereOperator = "&lt;="
+        GreaterThan        WhereOperator = "&gt;"
+        GreaterThanOrEqual WhereOperator = "&gt;="
+)
+
+type RowHider struct {
+        tableName     string
+        whereColumn   string
+        whereOperator WhereOperator
+        whereValue    string
+}
+
+func NewRowHider(tableName, col string, op WhereOperator, val string) *RowHider <span class="cov10" title="3">{
+        return &amp;RowHider{
+                tableName:     tableName,
+                whereColumn:   col,
+                whereOperator: op,
+                whereValue:    val,
+        }
+}</span>
+
+func (ch *RowHider) String() string <span class="cov0" title="0">{
+        return "RowHider"
+}</span>
+
+func (ch *RowHider) visit(rawStatement *pg_query.RawStmt) error <span class="cov10" title="3">{
+        selectStatement, ok := rawStatement.Stmt.Node.(*pg_query.Node_SelectStmt)
+        if ok </span><span class="cov10" title="3">{
+                fromClause := selectStatement.SelectStmt.FromClause
+                if fromClause != nil </span><span class="cov10" title="3">{
+                        for _, from := range fromClause </span><span class="cov10" title="3">{
+                                rangeVar, ok := from.Node.(*pg_query.Node_RangeVar)
+                                if ok </span><span class="cov10" title="3">{
+                                        tableName := rangeVar.RangeVar.Relname
+                                        if tableName == ch.tableName </span><span class="cov6" title="2">{
+                                                whereClause := selectStatement.SelectStmt.WhereClause
+
+                                                // new where clause
+                                                if whereClause == nil </span><span class="cov1" title="1">{
+                                                        ch.addWhereClause(selectStatement.SelectStmt)
+                                                        return nil
+                                                }</span>
+
+                                                // expand existing where clause
+                                                <span class="cov1" title="1">ch.expandWhereClause(selectStatement.SelectStmt)
+                                                return nil</span>
+                                        }
+                                }
+                        }
+                }
+        }
+        <span class="cov1" title="1">return nil</span>
+}
+
+func (ch *RowHider) whereExpr() pg_query.A_Expr <span class="cov6" title="2">{
+        return pg_query.A_Expr{
+                Kind: pg_query.A_Expr_Kind_AEXPR_OP,
+                Name: []*pg_query.Node{
+                        {
+                                Node: &amp;pg_query.Node_String_{
+                                        String_: &amp;pg_query.String{Sval: string(ch.whereOperator)},
+                                },
+                        },
+                },
+                Lexpr: &amp;pg_query.Node{
+                        Node: &amp;pg_query.Node_ColumnRef{
+                                ColumnRef: &amp;pg_query.ColumnRef{
+                                        Fields: []*pg_query.Node{
+                                                {
+                                                        Node: &amp;pg_query.Node_String_{
+                                                                String_: &amp;pg_query.String{Sval: ch.tableName},
+                                                        },
+                                                },
+                                                {
+                                                        Node: &amp;pg_query.Node_String_{
+                                                                String_: &amp;pg_query.String{Sval: ch.whereColumn},
+                                                        },
+                                                },
+                                        },
+                                },
+                        },
+                },
+                Rexpr: &amp;pg_query.Node{
+                        Node: &amp;pg_query.Node_AConst{
+                                AConst: &amp;pg_query.A_Const{
+                                        Val: &amp;pg_query.A_Const_Sval{
+                                                Sval: &amp;pg_query.String{Sval: ch.whereValue}},
+                                },
+                        },
+                },
+        }
+}</span>
+
+func (ch *RowHider) addWhereClause(stmt *pg_query.SelectStmt) <span class="cov1" title="1">{
+        where := ch.whereExpr()
+        stmt.WhereClause = &amp;pg_query.Node{
+                Node: &amp;pg_query.Node_AExpr{
+                        AExpr: &amp;where,
+                },
+        }
+
+}</span>
+
+func (ch *RowHider) expandWhereClause(stmt *pg_query.SelectStmt) <span class="cov1" title="1">{
+        existingWhere := stmt.WhereClause.GetAExpr()
+        where := ch.whereExpr()
+
+        stmt.WhereClause = &amp;pg_query.Node{
+                Node: &amp;pg_query.Node_BoolExpr{
+                        BoolExpr: &amp;pg_query.BoolExpr{
+                                Boolop: pg_query.BoolExprType_AND_EXPR,
+                                Args: []*pg_query.Node{
+                                        {
+                                                Node: &amp;pg_query.Node_AExpr{
+                                                        AExpr: existingWhere,
+                                                },
+                                        },
+                                        {
+                                                Node: &amp;pg_query.Node_AExpr{
+                                                        AExpr: &amp;where,
+                                                },
+                                        },
+                                },
+                        },
+                },
+        }
+
+}</span>
+</pre>
+		
+		<pre class="file" id="file10" style="display: none">package modify_queries
+
+import (
+        "errors"
+        "fmt"
+        pg_query "github.com/pganalyze/pg_query_go/v5"
+        "github.com/prusiksoftware/monorepo/obscurio/psql_proxy/schema"
+)
+
+type WildcardExpander struct {
+        tableDefinitions []schema.Table
+        columnsToHide    map[string][]string
+}
+
+func NewWildcardExpander(tables []schema.Table, columnsToHide map[string][]string) *WildcardExpander <span class="cov3" title="5">{
+        return &amp;WildcardExpander{
+                tableDefinitions: tables,
+                columnsToHide:    columnsToHide,
+        }
+}</span>
+
+func (we *WildcardExpander) String() string <span class="cov1" title="1">{
+        return "WildcardExpander"
+}</span>
+
+func (we *WildcardExpander) _addTarget(parts []string, stmt *pg_query.SelectStmt) <span class="cov5" title="19">{
+        var fields []*pg_query.Node
+        for _, part := range parts </span><span class="cov5" title="19">{
+                fields = append(fields, &amp;pg_query.Node{
+                        Node: &amp;pg_query.Node_String_{
+                                String_: &amp;pg_query.String{Sval: part},
+                        },
+                })
+        }</span>
+
+        <span class="cov5" title="19">stmt.TargetList = append(stmt.TargetList, &amp;pg_query.Node{
+                Node: &amp;pg_query.Node_ResTarget{
+                        ResTarget: &amp;pg_query.ResTarget{
+                                Val: &amp;pg_query.Node{
+                                        Node: &amp;pg_query.Node_ColumnRef{
+                                                ColumnRef: &amp;pg_query.ColumnRef{
+                                                        Fields: fields,
+                                                },
+                                        },
+                                },
+                        },
+                },
+        })</span>
+
+}
+
+func (we *WildcardExpander) _getAllColumnNamesForTable(tableName string) []string <span class="cov2" title="3">{
+        var columnNames []string
+        for _, table := range we.tableDefinitions </span><span class="cov10" title="222">{
+                if table.TableName == tableName </span><span class="cov2" title="3">{
+                        for _, column := range table.Columns </span><span class="cov5" title="19">{
+                                columnNames = append(columnNames, column.ColumnName)
+                        }</span>
+                }
+        }
+        <span class="cov2" title="3">return columnNames</span>
+}
+
+func (we *WildcardExpander) columnHidden(columnName, tableName string) bool <span class="cov2" title="2">{
+        hiddenColumns, ok := we.columnsToHide[tableName]
+        if ok </span><span class="cov0" title="0">{
+                for _, hiddenColumn := range hiddenColumns </span><span class="cov0" title="0">{
+                        if hiddenColumn == columnName </span><span class="cov0" title="0">{
+                                return true
+                        }</span>
+                }
+        }
+        <span class="cov2" title="2">return false</span>
+}
+
+func (we *WildcardExpander) visit(stmt *pg_query.RawStmt) error <span class="cov3" title="4">{
+        selectStatement, ok := stmt.Stmt.Node.(*pg_query.Node_SelectStmt)
+        if ok </span><span class="cov3" title="4">{
+                hadStar := false
+                targetList := selectStatement.SelectStmt.TargetList
+                for i, target := range targetList </span><span class="cov3" title="5">{
+                        resTarget := target.GetResTarget()
+                        if resTarget != nil </span><span class="cov3" title="5">{
+                                val := resTarget.GetVal()
+                                if val != nil </span><span class="cov3" title="5">{
+                                        colRef := val.GetColumnRef()
+                                        if colRef != nil </span><span class="cov3" title="5">{
+                                                for _, field := range colRef.Fields </span><span class="cov3" title="5">{
+                                                        if field.GetAStar() != nil </span><span class="cov2" title="3">{
+                                                                hadStar = true
+                                                                selectStatement.SelectStmt.TargetList = append(targetList[:i], targetList[i+1:]...)
+                                                                break</span>
+                                                        } else<span class="cov2" title="2"> {
+                                                                colName := field.GetString_().Sval
+                                                                tableName := we.getTableName(stmt)
+                                                                isHidden := we.columnHidden(colName, tableName)
+                                                                if isHidden </span><span class="cov0" title="0">{
+                                                                        return errors.New(fmt.Sprintf("column \"%s\" does not exist", colName))
+                                                                }</span>
+                                                        }
+                                                }
+                                        }
+                                }
+                        }
+                        <span class="cov3" title="5">if hadStar </span><span class="cov2" title="3">{
+                                break</span>
+                        }
+                }
+
+                <span class="cov3" title="4">if hadStar </span><span class="cov2" title="3">{
+                        tableName := we.getTableName(stmt)
+                        columnNames := we._getAllColumnNamesForTable(tableName)
+                        for _, fieldName := range columnNames </span><span class="cov5" title="19">{
+                                we._addTarget([]string{fieldName}, selectStatement.SelectStmt)
+                        }</span>
+                }
+        }
+        <span class="cov3" title="4">return nil</span>
+}
+
+func (we *WildcardExpander) getTableName(stmt *pg_query.RawStmt) string <span class="cov3" title="5">{
+        q, ok := stmt.Stmt.Node.(*pg_query.Node_SelectStmt)
+        if ok </span><span class="cov3" title="5">{
+                fromClause := q.SelectStmt.FromClause
+                if fromClause != nil </span><span class="cov3" title="5">{
+                        for _, from := range fromClause </span><span class="cov3" title="5">{
+                                rangeVar, ok := from.Node.(*pg_query.Node_RangeVar)
+                                if ok </span><span class="cov3" title="5">{
+                                        return rangeVar.RangeVar.Relname
+                                }</span>
+                        }
+                }
+        }
+        <span class="cov0" title="0">return ""</span>
+}
+</pre>
+		
+		<pre class="file" id="file11" style="display: none">package schema
+
+import (
+        "encoding/json"
+        "fmt"
+        "log"
+        "os"
+)
+
+func writetoFile(str string, filename string) <span class="cov0" title="0">{
+        os.Remove(filename)
+        f, err := os.Create(filename)
+        if err != nil </span><span class="cov0" title="0">{
+                log.Fatal(err)
+        }</span>
+        <span class="cov0" title="0">defer f.Close()
+        n, err := f.WriteString(str)
+        if err != nil </span><span class="cov0" title="0">{
+                log.Fatal(err)
+        }</span>
+        <span class="cov0" title="0">if n != len(str) </span><span class="cov0" title="0">{
+                log.Fatal("failed to write all bytes")
+        }</span>
+}
+
+func readFromFile(filename string) string <span class="cov0" title="0">{
+        f, err := os.Open(filename)
+        if err != nil </span><span class="cov0" title="0">{
+                log.Fatal(err)
+        }</span>
+        <span class="cov0" title="0">defer f.Close()
+        b := make([]byte, 1024)
+        s := ""
+        more := true
+        for more </span><span class="cov0" title="0">{
+                n, err := f.Read(b)
+                if err != nil </span><span class="cov0" title="0">{
+                        log.Fatal(err)
+                }</span>
+                <span class="cov0" title="0">s += string(b[:n])
+                if n &lt; 1024 </span><span class="cov0" title="0">{
+                        more = false
+                }</span>
+        }
+        <span class="cov0" title="0">return s</span>
+}
+
+func PrettyPrint(i interface{}) <span class="cov0" title="0">{
+        b, err := json.MarshalIndent(i, "", " ")
+        if err != nil </span><span class="cov0" title="0">{
+                log.Fatal(err)
+        }</span>
+        <span class="cov0" title="0">fmt.Println(string(b))</span>
+}
+
+func PrettyPrints(i interface{}) string <span class="cov0" title="0">{
+        b, err := json.MarshalIndent(i, "", " ")
+        if err != nil </span><span class="cov0" title="0">{
+                log.Fatal(err)
+        }</span>
+        <span class="cov0" title="0">return string(b)</span>
+}
+</pre>
+		
+		<pre class="file" id="file12" style="display: none">package schema
+
+import (
+        "context"
+        "database/sql"
+        "encoding/json"
+        "fmt"
+        "github.com/jackc/pgx/v5"
+        _ "github.com/lib/pq"
+        "github.com/lib/pq/oid"
+        "log"
+        "strings"
+)
+
+type Column struct {
+        TableCatalog           sql.NullString `json:"table_catalog"`
+        TableSchema            sql.NullString `json:"table_schema"`
+        TableName              sql.NullString `json:"table_name"`
+        ColumnName             string         `json:"column_name"`
+        OrdinalPosition        int            `json:"ordinal_position"`
+        ColumnDefault          sql.NullString `json:"column_default"`
+        IsNullable             sql.NullString `json:"is_nullable"`
+        DataType               sql.NullString `json:"data_type"`
+        CharacterMaximumLength *int16         `json:"character_maximum_length,omitempty"`
+        CharacterOctetLength   *int           `json:"character_octet_length,omitempty"`
+        NumericPrecision       *int           `json:"numeric_precision,omitempty"`
+        NumericPrecisionRadix  *int           `json:"numeric_precision_radix,omitempty"`
+        NumericScale           *int           `json:"numeric_scale,omitempty"`
+        DatetimePrecision      *int           `json:"datetime_precision,omitempty"`
+        CharacterSetName       sql.NullString `json:"character_set_name"`
+        CollationName          sql.NullString `json:"collation_name"`
+        oidType                oid.Oid
+}
+
+type Table struct {
+        TableCatalog              string         `json:"table_catalog"`
+        TableSchema               string         `json:"table_schema"`
+        TableName                 string         `json:"table_name"`
+        TableType                 sql.NullString `json:"table_type"`
+        SelfReferencingColumnName sql.NullString `json:"self_referencing_column_name,omitempty"`
+        ReferenceGeneration       sql.NullString `json:"reference_generation,omitempty"`
+        UserDefinedTypeCatalog    sql.NullString `json:"user_defined_type_catalog,omitempty"`
+        UserDefinedTypeSchema     sql.NullString `json:"user_defined_type_schema,omitempty"`
+        UserDefinedTypeName       sql.NullString `json:"user_defined_type_name,omitempty"`
+        IsInsertableInto          sql.NullString `json:"is_insertable_into,omitempty"`
+        IsTyped                   sql.NullString `json:"is_typed,omitempty"`
+        CommitAction              sql.NullString `json:"commit_action,omitempty"`
+        Columns                   []Column       `json:"columns,omitempty"`
+}
+
+func GetColumns(db *pgx.Conn, tableName string) []Column <span class="cov7" title="440">{
+
+        columnNames := []string{
+                "table_catalog",
+                "table_schema",
+                "table_name",
+                "column_name",
+                "ordinal_position",
+                "column_default",
+                "is_nullable",
+                "data_type",
+                "character_maximum_length",
+                "character_octet_length",
+                "numeric_precision",
+                "numeric_precision_radix",
+                "numeric_scale",
+                "datetime_precision",
+                "character_set_name",
+                "collation_name",
+                "pgc.oid",
+        }
+        columnList := strings.Join(columnNames, ", ")
+        query := fmt.Sprintf(`
+        SELECT %s
+        FROM information_schema.columns
+        JOIN pg_class pgc ON information_schema.columns.table_name = pgc.relname
+        WHERE table_name = '%s'`, columnList, tableName)
+
+        rows, err := db.Query(context.Background(), query)
+        defer rows.Close()
+        if err != nil </span><span class="cov0" title="0">{
+                panic(err)</span>
+        }
+
+        <span class="cov7" title="440">var columns []Column
+        for rows.Next() </span><span class="cov10" title="4238">{
+                var column Column
+                err := rows.Scan(
+                        &amp;column.TableCatalog,
+                        &amp;column.TableSchema,
+                        &amp;column.TableName,
+                        &amp;column.ColumnName,
+                        &amp;column.OrdinalPosition,
+                        &amp;column.ColumnDefault,
+                        &amp;column.IsNullable,
+                        &amp;column.DataType,
+                        &amp;column.CharacterMaximumLength,
+                        &amp;column.CharacterOctetLength,
+                        &amp;column.NumericPrecision,
+                        &amp;column.NumericPrecisionRadix,
+                        &amp;column.NumericScale,
+                        &amp;column.DatetimePrecision,
+                        &amp;column.CharacterSetName,
+                        &amp;column.CollationName,
+                        &amp;column.oidType,
+                )
+                if err != nil </span><span class="cov0" title="0">{
+                        log.Fatal(err)
+                }</span>
+
+                <span class="cov10" title="4238">columns = append(columns, column)</span>
+        }
+        <span class="cov7" title="440">return columns</span>
+}
+
+func GetTables(dburi string) []Table <span class="cov1" title="2">{
+        config, err := pgx.Connect(context.Background(), dburi)
+        if err != nil </span><span class="cov0" title="0">{
+                log.Fatal(err)
+        }</span>
+        <span class="cov1" title="2">defer config.Close(context.Background())
+
+        conn, err := pgx.ConnectConfig(context.Background(), config.Config())
+        if err != nil </span><span class="cov0" title="0">{
+                log.Fatal(err)
+        }</span>
+        <span class="cov1" title="2">defer conn.Close(context.Background())
+
+        columnNames := []string{
+                "table_catalog",
+                "table_schema",
+                "table_name",
+                "table_type",
+                "self_referencing_column_name",
+                "reference_generation",
+                "user_defined_type_catalog",
+                "user_defined_type_schema",
+                "user_defined_type_name",
+                "is_insertable_into",
+                "is_typed",
+                "commit_action",
+        }
+
+        columnList := strings.Join(columnNames, ", ")
+        query := fmt.Sprintf(`
+        SELECT %s
+        FROM information_schema.tables
+        ORDER BY table_name`, columnList)
+
+        rows, err := conn.Query(context.Background(), query)
+        defer rows.Close()
+        if err != nil </span><span class="cov0" title="0">{
+                log.Fatal(err)
+        }</span>
+
+        <span class="cov1" title="2">var tables []Table
+        for rows.Next() </span><span class="cov7" title="440">{
+                var table Table
+                err := rows.Scan(
+                        &amp;table.TableCatalog,
+                        &amp;table.TableSchema,
+                        &amp;table.TableName,
+                        &amp;table.TableType,
+                        &amp;table.SelfReferencingColumnName,
+                        &amp;table.ReferenceGeneration,
+                        &amp;table.UserDefinedTypeCatalog,
+                        &amp;table.UserDefinedTypeSchema,
+                        &amp;table.UserDefinedTypeName,
+                        &amp;table.IsInsertableInto,
+                        &amp;table.IsTyped,
+                        &amp;table.CommitAction,
+                )
+                if err != nil </span><span class="cov0" title="0">{
+                        panic(err)</span>
+                }
+                <span class="cov7" title="440">tables = append(tables, table)</span>
+        }
+
+        <span class="cov1" title="2">for i, table := range tables </span><span class="cov7" title="440">{
+                tables[i].Columns = GetColumns(conn, table.TableName)
+        }</span>
+
+        <span class="cov1" title="2">return tables</span>
+}
+
+func (t *Table) PrettyPrint() <span class="cov0" title="0">{
+        b, err := json.MarshalIndent(t, "", "  ")
+        if err != nil </span><span class="cov0" title="0">{
+                log.Fatal(err)
+        }</span>
+        <span class="cov0" title="0">fmt.Println(string(b))</span>
+}
+</pre>
+		
+		<pre class="file" id="file13" style="display: none">package psql_proxy
+
+import (
+        "context"
+        "fmt"
+        wire "github.com/jeroenrinzema/psql-wire"
+        _ "github.com/lib/pq"
+        "github.com/prusiksoftware/monorepo/obscurio/analytics"
+        "log"
+        "net"
+)
+
+type Status string
+
+const (
+        Booting Status = "booting"
+        Running        = "running"
+        Done           = "done"
+)
+
+type Server struct {
+        config           *Conf
+        StatusChan       chan Status
+        dbManagers       []*dbManager
+        analyticsTracker *analytics.Analytics
+}
+
+func NewServer(config *Conf, a *analytics.Analytics) (*Server, error) <span class="cov0" title="0">{
+        var serverProfiles []*dbManager
+        for _, configProfile := range config.Profiles </span><span class="cov0" title="0">{
+                p, err := createDBManager(configProfile)
+                if err != nil </span><span class="cov0" title="0">{
+                        return nil, err
+                }</span>
+                <span class="cov0" title="0">serverProfiles = append(serverProfiles, p)</span>
+        }
+
+        <span class="cov0" title="0">s := Server{
+                config:           config,
+                StatusChan:       make(chan Status),
+                dbManagers:       serverProfiles,
+                analyticsTracker: a,
+        }
+
+        return &amp;s, nil</span>
+}
+
+func (s *Server) Run() error <span class="cov0" title="0">{
+        listener, err := net.Listen("tcp", "0.0.0.0:5432")
+        if err != nil </span><span class="cov0" title="0">{
+                return err
+        }</span>
+        <span class="cov0" title="0">defer listener.Close()
+
+        s.StatusChan &lt;- Running
+        for </span><span class="cov0" title="0">{
+                conn, err := listener.Accept()
+                if err != nil </span><span class="cov0" title="0">{
+                        log.Fatal(err)
+                }</span>
+                <span class="cov0" title="0">go s.handleConnection(conn, s.config)</span>
+        }
+}
+
+func (s *Server) handleConnection(conn net.Conn, config *Conf) <span class="cov0" title="0">{
+        log.Println("Accepted connection from", conn.RemoteAddr())
+        b := NewClientManager(conn, config)
+        err := b.Run()
+        if err != nil </span><span class="cov0" title="0">{
+                log.Println(err)
+        }</span>
+        <span class="cov0" title="0">log.Println("Closed connection from", conn.RemoteAddr())</span>
+}
+
+func (s *Server) getDBManager(ctx context.Context) (*dbManager, error) <span class="cov0" title="0">{
+        connectionUsername := wire.AuthenticatedUsername(ctx)
+        for _, profile := range s.dbManagers </span><span class="cov0" title="0">{
+                if profile.username == connectionUsername </span><span class="cov0" title="0">{
+                        return profile, nil
+                }</span>
+        }
+
+        <span class="cov0" title="0">return nil, fmt.Errorf("no configProfile found for user '%s'", connectionUsername)</span>
+}
+</pre>
+		
+		<pre class="file" id="file14" style="display: none">package psql_proxy
+
+import (
+        wire "github.com/jeroenrinzema/psql-wire"
+        "github.com/stretchr/testify/mock"
+)
+
+type MockQueryWriter struct {
+        mock.Mock
+        defineCalls      []wire.Columns
+        rowCalls         [][]interface{}
+        descriptionCalls []string
+}
+
+func (m *MockQueryWriter) Define(columns wire.Columns) error <span class="cov0" title="0">{
+        m.defineCalls = append(m.defineCalls, columns)
+        return nil
+}</span>
+
+func (m *MockQueryWriter) Row(i []interface{}) error <span class="cov0" title="0">{
+        m.rowCalls = append(m.rowCalls, i)
+        return nil
+}</span>
+
+func (m *MockQueryWriter) Empty() error <span class="cov0" title="0">{
+        return nil
+}</span>
+
+func (m *MockQueryWriter) Complete(description string) error <span class="cov0" title="0">{
+        m.descriptionCalls = append(m.descriptionCalls, description)
+        return nil
+}</span>
+</pre>
+		
+		</div>
+	</body>
+	<script>
+	(function() {
+		var files = document.getElementById('files');
+		var visible;
+		files.addEventListener('change', onChange, false);
+		function select(part) {
+			if (visible)
+				visible.style.display = 'none';
+			visible = document.getElementById(part);
+			if (!visible)
+				return;
+			files.value = part;
+			visible.style.display = 'block';
+			location.hash = part;
+		}
+		function onChange() {
+			select(files.value);
+			window.scrollTo(0, 0);
+		}
+		if (location.hash != "") {
+			select(location.hash.substr(1));
+		}
+		if (!visible) {
+			select("file0");
+		}
+	})();
+	</script>
+</html>
