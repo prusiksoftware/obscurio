@@ -1,0 +1,22 @@
+name: Publish Docker Image
+
+on:
+  workflow_dispatch:
+  repository_dispatch:
+    types: [docker-image-ready]
+
+jobs:
+  push:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Login to ghcr.io
+        run: |
+          echo ${{ secrets.GITHUB_TOKEN }} | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+
+      - name: Publish to ghcr.io
+        run: |
+            cd obscurio
+            docker pull ghcr.io/prusiksoftware/obscurio_production:latest
+            docker tag ghcr.io/prusiksoftware/obscurio_production:latest ghcr.io/prusiksoftware/obscurio:latest
+            docker push ghcr.io/prusiksoftware/obscurio:latest
