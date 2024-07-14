@@ -1,10 +1,10 @@
 # Obscurio Proxy
-## Description
-A psql proxy to remove and obfuscate data from queries.
+A postgres proxy to remove, replace and obfuscate data from queries.
 
 ## Repository Usage
 - This project's source code is stored in a private repo. 
 - This repo is purely as a holder for the docker repository.
+- We intend to open source this project in the future, likely under an AGPL license.
 
 ## Example Usage
 ### Free Usage
