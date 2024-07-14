@@ -16,7 +16,6 @@ jobs:
 
       - name: Publish to ghcr.io
         run: |
-            cd obscurio
             docker pull ghcr.io/prusiksoftware/obscurio_production:latest
             docker tag ghcr.io/prusiksoftware/obscurio_production:latest ghcr.io/prusiksoftware/obscurio:latest
             docker push ghcr.io/prusiksoftware/obscurio:latest
